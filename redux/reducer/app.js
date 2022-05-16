@@ -2,6 +2,7 @@ import {createSlice} from "@reduxjs/toolkit";
 import {screens, startScreen, stateChangeTypes, states} from "../../constants/settings";
 import {createCustomReducer} from "../../utils/redux/requestReducer";
 import {useSelector} from "react-redux";
+import {loadGetInitialProps} from "next/dist/shared/lib/utils";
 
 const name = "app";
 let importPromise;
@@ -25,8 +26,8 @@ const appSlice = createSlice({
   name,
   initialState: {
     activityState: "idle",
-    stateChangeType: stateChangeTypes.IN_SERIES,
-    currentScreen: startScreen,
+    stateChangeType: stateChangeTypes.PARALLEL.name,
+    currentScreen: {name: startScreen, isActive: false},
     nextScreen: null,
     transitionStates: (() => {
       const transitions = {};
@@ -37,8 +38,7 @@ const appSlice = createSlice({
 
       return transitions;
     })(),
-    transitionData: null,
-    transitionScreen: null,
+    transitionData: [],
     transitionResolver: null,
     loadingComplete: false
   },
@@ -47,25 +47,48 @@ const appSlice = createSlice({
       state.currentScreen = current;
       state.nextScreen = next;
       state.activityState = "action";
+
+      console.log(state.currentScreen)
+      console.log(state.nextScreen);
+      debugger
     },
     setTransitionData(state, {payload: {screen, to, duration}}) {
-      state.transitionData = {screen, to, duration};
-      state.transitionStates[screen] = to;
+      console.log("REDUX: set transition data")
+      state.transitionData.push({screen, to, duration});
+      state.transitionStates[screen.name] = to;
       state.transitionResolver = null;
+    },
+    removeTransitionData(state, {payload: {screen, to}}) {
+      const deleteIndex = state.transitionData.find(data => data.screen === screen && data.to === to);
+      if (deleteIndex === -1) return;
+
+      state.transitionData.splice(deleteIndex, 1);
     },
     stopTransition(state) {
       state.currentScreen = state.nextScreen;
       state.nextScreen = null;
-      state.transitionScreen = null;
-      state.transitionData = null;
+      state.transitionData.length = 0;
       state.transitionResolver = null;
       state.activityState = "idle";
     },
-    selectTransitionScreen(state, action) {
-      state.transitionScreen = action.payload;
+    selectTransitionScreen(state, {payload: {type, isActive}}) {
+      console.log("REDUX: select transition screen")
+      const screen = state[`${type}Screen`];
+      if (!screen) return;
+
+      screen.isActive = isActive;
+      console.log("selectTransitionScreen")
+      console.log(screen);
+      debugger
     },
     transitionResolved(state, {payload: {screen, to}}) {
       state.transitionResolver = {screen, to};
+    },
+    changeStateChangeType(state, action) {
+      const availableTypes = Object.values(stateChangeTypes).map(data => data.name);
+      if (!availableTypes.includes(action.payload)) return;
+
+      state.stateChangeType = action.payload;
     }
   },
   extraReducers: {
@@ -73,7 +96,11 @@ const appSlice = createSlice({
   }
 });
 
-export const {selectScreens, setTransitionData, stopTransition, selectTransitionScreen, changeTransitionState, transitionResolved} = appSlice.actions;
+export const {
+  selectScreens, setTransitionData, stopTransition,
+  selectTransitionScreen, changeTransitionState,
+  transitionResolved, changeStateChangeType, removeTransitionData
+} = appSlice.actions;
 
 export {loadThunk};
 

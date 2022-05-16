@@ -1,65 +1,99 @@
 import React, {useEffect} from "react";
 import {screens, stopTransitionStates} from "../../../constants/settings";
-import {setTransitionData, transitionResolved, useApp} from "../../../redux/reducer/app";
+import {
+  removeTransitionData,
+  selectTransitionScreen,
+  setTransitionData,
+  transitionResolved,
+  useApp
+} from "../../../redux/reducer/app";
 import {useDispatch} from "react-redux";
 import countSomeTime from "../../../utils/time";
 import {getTransitionData} from "../../../utils/transitions/getData";
 
 export default function CommonScreen({className, pageName, onClick, startScreen, endTransitionCallback}) {
   const dispatch = useDispatch();
-  const {transitionScreen, transitionStates, transitionData, transitionResolver} = useApp();
+  const {currentScreen, nextScreen, transitionStates, transitionData, transitionResolver} = useApp();
 
   useEffect(() => {
-    if (!transitionScreen) return;
+    if (!currentScreen || !currentScreen.isActive) return;
 
-    setTransitionDataFunc();
-  }, [transitionScreen]);
+    console.log("currentScreen", currentScreen)
+    //debugger
+    setTransitionDataFunc(currentScreen);
+  }, [currentScreen?.isActive]);
 
   useEffect(() => {
-    if (!transitionData) return;
+    if (!nextScreen || !nextScreen.isActive) return;
 
-    const {screen, to, duration} = transitionData;
+    console.log("nextScreen", nextScreen)
+    //debugger
+    setTransitionDataFunc(nextScreen);
+  }, [nextScreen?.isActive]);
+
+  useEffect(() => {
+    if (!transitionData.length) return;
+
+    const {screen, to, duration} = transitionData.at(-1);
+
+    console.log("--transitionData--")
+
+    console.log("last added data", screen, to, duration)
 
     countSomeTime(duration ?? 0).then(() => {
       dispatch(transitionResolved({screen, to}));
     });
-  }, [transitionData]);
+  }, [transitionData.length]);
 
   useEffect(() => {
     if (!transitionResolver) return;
 
-    const {to} = transitionData;
+    const {screen, to} = transitionResolver;
+    console.log(screen, to)
+
+    dispatch(removeTransitionData({screen, to}))
+
+    console.log("TRANSITION RESOLVED", screen.name, "->", to);
+    //debugger
 
     if (stopTransitionStates.includes(to)) {
+      console.log("end callback");
+      console.log("states", transitionStates);
+      if (screen !== currentScreen && screen !== nextScreen) {
+        console.log("!!!!!!!")
+        //debugger
+      }
+
+      const type = screen === currentScreen ? "current" : "next";
+
+      dispatch(selectTransitionScreen({type, isActive: false}));
+      //debugger
       endTransitionCallback();
     } else {
-      setTransitionDataFunc();
+      console.log("new iteration: screen", screen);
+      //debugger
+      setTransitionDataFunc(screen);
     }
 
   }, [transitionResolver]);
 
-  function setTransitionDataFunc() {
-    const screenTransitionData = screens[transitionScreen].transitions;
-    const currentScreenState = transitionStates[transitionScreen];
-    //const {to, duration} = screenTransitionData[currentScreenState];
-    const {to, duration} = getTransitionData(transitionStates, transitionScreen);
+  function setTransitionDataFunc(screen) {
+    console.log("!!!", screen.name)
+    const {to, duration} = getTransitionData(transitionStates, screen.name);
 
-    dispatch(setTransitionData({screen: transitionScreen, to, duration}))
-  }
+    console.log("dispatch COMMON", to, duration)
+    //debugger
 
-  function countTransitionTime(time) {
-    let promiseResolver;
-    console.log("countTransitionTime", time)
-    const promise = new Promise((resolve) => promiseResolver = resolve);
-    setTimeout(() => promiseResolver(), time);
-
-    return promise;
+    dispatch(setTransitionData({screen, to, duration}))
+    console.log("transitionData", transitionData)
+    console.log("transitionStates", transitionStates)
+    //debugger
   }
 
   return <Component className={className}
                     pageName={pageName}
                     onClick={onClick}
-                    transition={transitionStates[transitionScreen]}
+                    transition={transitionStates[pageName]}
                     startScreen={startScreen}/>
 }
 

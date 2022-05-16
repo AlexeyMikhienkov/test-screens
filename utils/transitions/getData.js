@@ -8,6 +8,6 @@ export function getTransitionData(states, screenName) {
 
 export function getDelay(states, screenName) {
   const nextScreenStartState = states[screenName];
-  const transitionData =  screens[screenName].transitions;
+  const transitionData = screens[screenName].transitions;
   return transitionData[nextScreenStartState].delay;
 }
