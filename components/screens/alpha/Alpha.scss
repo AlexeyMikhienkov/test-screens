@@ -1,0 +1,17 @@
+.alpha {
+  &_cycle {
+    opacity: 1;
+  }
+
+  &_show {
+    opacity: 0.5;
+  }
+
+  &_hide {
+    opacity: 0.5;
+  }
+
+  &_hidden {
+    opacity: 0;
+  }
+}
