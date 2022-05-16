@@ -7,9 +7,9 @@ export const screens = {
     name: "alpha",
     Component: Alpha,
     transitions: {
-      cycle: {to: "hide", duration: 1200},
+      cycle: {to: "hide", duration: 1200, delay: 200},
       hide: {to: "hidden"},
-      hidden: {to: "show", duration: 2000},
+      hidden: {to: "show", duration: 2000, delay: 600},
       show: {to: "cycle"}
     }
   },
@@ -17,9 +17,9 @@ export const screens = {
     name: "beta",
     Component: Beta,
     transitions: {
-      cycle: {to: "hide", duration: 1200},
+      cycle: {to: "hide", duration: 1200, delay: 300},
       hide: {to: "hidden"},
-      hidden: {to: "show", duration: 2000},
+      hidden: {to: "show", duration: 2000, delay: 500},
       show: {to: "cycle"}
     }
   },
@@ -27,9 +27,9 @@ export const screens = {
     name: "gamma",
     Component: Gamma,
     transitions: {
-      cycle: {to: "hide", duration: 1200},
+      cycle: {to: "hide", duration: 1200, delay: 350},
       hide: {to: "hidden"},
-      hidden: {to: "show", duration: 2000},
+      hidden: {to: "show", duration: 2000, delay: 400},
       show: {to: "cycle"}
     }
   },
@@ -80,5 +80,6 @@ export const stateChangeTypes = {
 };
 
 export function getTranslation(typeName) {
-  return Object.values(stateChangeTypes).find(({name}) => typeName === name)?.translate ?? "not found"
+  return Object.values(stateChangeTypes)
+    .find(({name}) => typeName === name)?.translate ?? "not found"
 }

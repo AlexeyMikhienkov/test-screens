@@ -2,6 +2,8 @@ import React, {useEffect} from "react";
 import {screens, stopTransitionStates} from "../../../constants/settings";
 import {setTransitionData, transitionResolved, useApp} from "../../../redux/reducer/app";
 import {useDispatch} from "react-redux";
+import countSomeTime from "../../../utils/time";
+import {getTransitionData} from "../../../utils/transitions/getData";
 
 export default function CommonScreen({className, pageName, onClick, startScreen, endTransitionCallback}) {
   const dispatch = useDispatch();
@@ -18,7 +20,7 @@ export default function CommonScreen({className, pageName, onClick, startScreen,
 
     const {screen, to, duration} = transitionData;
 
-    countTransitionTime(duration ?? 0).then(() => {
+    countSomeTime(duration ?? 0).then(() => {
       dispatch(transitionResolved({screen, to}));
     });
   }, [transitionData]);
@@ -39,7 +41,8 @@ export default function CommonScreen({className, pageName, onClick, startScreen,
   function setTransitionDataFunc() {
     const screenTransitionData = screens[transitionScreen].transitions;
     const currentScreenState = transitionStates[transitionScreen];
-    const {to, duration} = screenTransitionData[currentScreenState];
+    //const {to, duration} = screenTransitionData[currentScreenState];
+    const {to, duration} = getTransitionData(transitionStates, transitionScreen);
 
     dispatch(setTransitionData({screen: transitionScreen, to, duration}))
   }

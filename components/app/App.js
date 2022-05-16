@@ -7,22 +7,35 @@ import {
   selectTransitionScreen
 } from "../../redux/reducer/app";
 import CommonScreen from "../screens/commonScreen/CommonScreen";
-import {getTranslation, stateChangeTypes} from "../../constants/settings";
+import {getTranslation, screens, stateChangeTypes} from "../../constants/settings";
+import {func} from "prop-types";
+import countSomeTime from "../../utils/time";
+import {getDelay} from "../../utils/transitions/getData";
 
 export default function App() {
   const dispatch = useDispatch();
-  const {currentScreen, nextScreen, activityState, transitionData, startScreen, transitionScreen, transitionResolver} = useApp();
+  const {
+    currentScreen, nextScreen, activityState,
+    transitionData, startScreen, transitionScreen,
+    transitionResolver, transitionStates
+  } = useApp();
   const [stateChangeType, setStateChangeType] = useState(stateChangeTypes.IN_SERIES.name);
 
   useEffect(() => {
     if (activityState === "idle") return;
 
-    dispatch(selectTransitionScreen(currentScreen));
+    if (stateChangeType === stateChangeTypes.IN_SERIES.name)
+      dispatch(selectTransitionScreen(currentScreen));
+    else {
+      const transitionDelay = getDelay(transitionStates, nextScreen);
+
+      dispatch(selectTransitionScreen(currentScreen));
+      countSomeTime(transitionDelay).then(() => dispatch(selectTransitionScreen(nextScreen)))
+    }
   }, [activityState]);
 
-
   function clickAction(nextScreen) {
-    dispatch(selectScreens({next: nextScreen, activityState}));
+    dispatch(selectScreens({next: nextScreen}));
   }
 
   function transitionEndedActions() {
